@@ -20,13 +20,16 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
-import java.util.logging.Logger;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Server that manages startup/shutdown of a {@code Greeter} server.
  */
 public class HelloWorldServer {
-  private static final Logger logger = Logger.getLogger(HelloWorldServer.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(HelloWorldServer.class);
 
   private Server server;
 
@@ -37,7 +40,7 @@ public class HelloWorldServer {
         .addService(new GreeterImpl())
         .build()
         .start();
-    logger.info("Server started, listening on " + port);
+    LOGGER.info("Server started, listening on {}", port);
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
       public void run() {
@@ -74,9 +77,15 @@ public class HelloWorldServer {
   }
 
   static class GreeterImpl extends GreeterGrpc.GreeterImplBase {
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(GreeterImpl.class);
 
     @Override
     public void sayHello(HelloRequest req, StreamObserver<HelloReply> responseObserver) {
+      LOGGER.info("receive hello request from {}", req.getName());
+      try {
+        TimeUnit.SECONDS.sleep(1);
+      } catch (InterruptedException ignored) {
+      }
       HelloReply reply = HelloReply.newBuilder().setMessage("Hello " + req.getName()).build();
       responseObserver.onNext(reply);
       responseObserver.onCompleted();

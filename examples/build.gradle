@@ -31,6 +31,9 @@ dependencies {
     implementation "io.grpc:grpc-stub:${grpcVersion}"
     compileOnly "javax.annotation:javax.annotation-api:1.2"
 
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.+'
+    runtime group: 'ch.qos.logback', name: 'logback-classic', version: '1.+'
+
     // examples/advanced need this for JsonFormat
     implementation "com.google.protobuf:protobuf-java-util:${protobufVersion}"
 

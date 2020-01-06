@@ -37,13 +37,15 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A sample gRPC server that serve the RouteGuide (see route_guide.proto) service.
  */
 public class RouteGuideServer {
-  private static final Logger logger = Logger.getLogger(RouteGuideServer.class.getName());
+  private static final Logger logger = LoggerFactory.getLogger(RouteGuideServer.class);
 
   private final int port;
   private final Server server;
@@ -127,6 +129,7 @@ public class RouteGuideServer {
      */
     @Override
     public void getFeature(Point request, StreamObserver<Feature> responseObserver) {
+      logger.info("get Feature");
       responseObserver.onNext(checkFeature(request));
       responseObserver.onCompleted();
     }
@@ -139,6 +142,7 @@ public class RouteGuideServer {
      */
     @Override
     public void listFeatures(Rectangle request, StreamObserver<Feature> responseObserver) {
+      logger.info("list Feature");
       int left = min(request.getLo().getLongitude(), request.getHi().getLongitude());
       int right = max(request.getLo().getLongitude(), request.getHi().getLongitude());
       int top = max(request.getLo().getLatitude(), request.getHi().getLatitude());
@@ -176,6 +180,7 @@ public class RouteGuideServer {
 
         @Override
         public void onNext(Point point) {
+          logger.info("record route onNext");
           pointCount++;
           if (RouteGuideUtil.exists(checkFeature(point))) {
             featureCount++;
@@ -190,11 +195,12 @@ public class RouteGuideServer {
 
         @Override
         public void onError(Throwable t) {
-          logger.log(Level.WARNING, "recordRoute cancelled");
+          logger.warn("recordRoute cancelled");
         }
 
         @Override
         public void onCompleted() {
+          logger.info("record route onCompleted");
           long seconds = NANOSECONDS.toSeconds(System.nanoTime() - startTime);
           responseObserver.onNext(RouteSummary.newBuilder().setPointCount(pointCount)
               .setFeatureCount(featureCount).setDistance(distance)
@@ -216,6 +222,7 @@ public class RouteGuideServer {
       return new StreamObserver<RouteNote>() {
         @Override
         public void onNext(RouteNote note) {
+          logger.info("record chat onNext");
           List<RouteNote> notes = getOrCreateNotes(note.getLocation());
 
           // Respond with all previous notes at this location.
@@ -229,11 +236,12 @@ public class RouteGuideServer {
 
         @Override
         public void onError(Throwable t) {
-          logger.log(Level.WARNING, "routeChat cancelled");
+          logger.warn("routeChat cancelled");
         }
 
         @Override
         public void onCompleted() {
+          logger.info("record chat onCompleted");
           responseObserver.onCompleted();
         }
       };
